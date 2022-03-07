@@ -3,14 +3,6 @@ from datetime import datetime
 from yt_dlp import YoutubeDL
 import npyscreen
 
-# def my_hook(d):
-#     print('hook')
-#     if d['status'] == 'downloading':
-#         print(f'downloading')
-#     if d['status'] == 'finished':
-#         print('Done downloading, now converting ...')
-#         return d
-
 
 class Archivist():
 
@@ -38,7 +30,8 @@ class Archivist():
                 video_list.append(video_dict)
 
             except Exception:
-                video_dict = {'title': 'n/a', 'channel': 'n/a', 'date': 'n/a'}
+                video_dict = {'title': 'n/a', 'channel': 'n/a',
+                              'date': 'n/a', 'url': 'n/a'}
                 video_list.append(video_dict)
 
         with open(f'{self.filename}.json', 'w') as output:
@@ -154,29 +147,30 @@ class CompareForm(npyscreen.Form):
         self.status.value = 'idle'
         self.DISPLAY()
 
-    def find_missing(self, file1, file2):
+    def find_missing(self, newer, older):
         missing_list = []
-        with open(file1) as input_file:
-            json_1 = json.load(input_file)
-        with open(file2) as input_file:
-            json_2 = json.load(input_file)
+        with open(newer) as input_file:
+            json_newer = json.load(input_file)
+        with open(older) as input_file:
+            json_older = json.load(input_file)
 
-        list_1 = []
-        for video in json_1:
-            list_1.append(video['title'])
+        list_newer = {}
+        for video in json_newer:
+            list_newer[video['url']] = video['title']
 
-        list_2 = []
-        for video in json_2:
-            list_2.append(video['title'])
-        offset = len(list_1) - len(list_2)
+        list_older = {}
+        for video in json_older:
+            list_older[video['url']] = video['title']
 
-        for i in list_2:
-            if i in list_1[offset:]:
+        offset = len(list_newer) - len(list_older)
+
+        for i in list_older.keys():
+            if i in list(list_newer.keys())[offset:]:
                 pass
             elif i == 'n/a':
                 pass
             else:
-                missing_list.append(i)
+                missing_list.append(list_older[i])
 
         missing_list.append('')
         return missing_list
